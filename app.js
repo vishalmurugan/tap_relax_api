@@ -57,7 +57,7 @@ app.get('/',function(req,res){
     return res.send('Tab & Relax API Connected')
 });
 
-// var table=require('./modals/share_contact');
+// var table=require('./modals/contacts');
 
 // table.sync({force:true})
 //   .then(() => {
@@ -69,6 +69,7 @@ app.get('/',function(req,res){
 app.use('/api/account',require('./routes/accountRoutes'));
 app.use('/api/master',require('./routes/masterRoutes'));
 app.use('/api/customer',require('./routes/customerRoutes'));
+app.use('/api/contact',require('./routes/contactRoutes'));
 
 var server=http.createServer(app);
 
