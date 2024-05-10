@@ -138,7 +138,7 @@ module.exports={
             // Validation Schema
             var schema = yup.object({
                 userId: yup.string().required(),
-                otp: yup.string().min(6).max(6).required(),
+                otp: yup.string().min(4).max(4).required(),
             });
     
             // Validate the request data
@@ -151,7 +151,7 @@ module.exports={
                 var checkOtp= user.otp===otp;
                 if(checkOtp){    
                     await Users.update({verified:1,otp:null},{where:{id:userId}});
-                    return res.status(200).json({ success:true,message: 'Account verified successfully' });
+                    return res.status(200).json({ success:true,message: 'OTP verified successfully' });
                 }else{
                     return res.status(400).json({ success:false,error: 'Invalid OTP' });
                 }
@@ -172,27 +172,35 @@ module.exports={
     forgotPassword:async function(req,res){
         try {
             var reqData = req.body;
-            var { email,isVerified,password } = reqData;
+            var { email,isVerified,password,userId } = reqData;
     
             // Validation Schema
             var schema = yup.object({
-                email: yup.string().email().required(),
+                email: !isVerified?yup.string().email().required():yup.string(),
                 isVerified:yup.boolean().required(),
-                password:isVerified?yup.string().required():yup.string()
+                password:isVerified?yup.string().required():yup.string(),
+                userId: isVerified?yup.string().uuid().required():yup.string(),
             });
     
             // Validate the request data
             await schema.validate(reqData, { abortEarly: false });
     
+            var condition={};
+            if(isVerified){
+                condition.id=userId;
+            }else{
+                condition.email=email;
+            }
+
             //To check User exist or Not
-            var user=await Users.findOne({where:{email}}).then();
+            var user=await Users.findOne({where:condition}).then();
 
             if(user){ 
             
                 if(isVerified){ //To update password after OTP verification
 
                     password=await utils.hashPassword(password);
-                    await Users.update({ password:password },{where:{id:user.id}});
+                    await Users.update({ password:password },{where:{id:userId}});
                     return res.status(200).json({ success:true,message: 'Password Reseted successfully' });
 
                 }else{ //To send OTP for verification
@@ -210,6 +218,7 @@ module.exports={
                 return res.status(400).json({ success:false,error: 'Acoount Not Exist' });
             }
         } catch (error) {
+            
             //Send Error response
             var code= (error.name === 'ValidationError')?400:500;   
             return res.status(code).json({ success:false,error: error });
