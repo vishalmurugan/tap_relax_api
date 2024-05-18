@@ -8,7 +8,7 @@ const auth=require('../middleware/auth');
 const masterController=require('../controllers/masterController');
 
 //Routes
-//router.post('/create',productsController.createProducts);
+router.post('/create',masterController.createProducts);
 router.post('/social_media/create',masterController.createSocialMedia);
 
 router.get('/records',masterController.getAllMasterRecords);

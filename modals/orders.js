@@ -35,7 +35,9 @@ const table = db.define('orders',{
        status:{type:DataTypes.INTEGER,defaultValue:0},
        quantity:{type:DataTypes.INTEGER,defaultValue:1},
        price:{type:DataTypes.BIGINT},
-       is_active:{type:DataTypes.INTEGER,defaultValue:0}
+       card_name:{type:DataTypes.STRING},
+       is_active:{type:DataTypes.INTEGER,defaultValue:0},
+       cardType:{type:DataTypes.INTEGER,defaultValue:0}
   }, {
     timestamps: true
   });

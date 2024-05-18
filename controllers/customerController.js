@@ -5,6 +5,7 @@ const CompanyDetails=require('../modals/company_details');
 const PaymentDetails=require('../modals/payment_details');
 const DeliveryDetails=require('../modals/delivery_details');
 const ShareContact=require('../modals/share_contact');
+const Customer= require('../modals/customer_profiles');
 
 const yup=require('yup');
 const db=require('../config/database');
@@ -24,7 +25,9 @@ module.exports={
                 isSkip:yup.boolean().required(),
                 order_details:yup.object({
                     price:yup.string().required(),
+                    card_name:isSkip?yup.string():yup.string().required(),
                     quantity:yup.number().required(),
+                    cardType:yup.number().required(),
                     card:yup.string().required()
                 }),
                 delivery_details:yup.object({
@@ -38,8 +41,8 @@ module.exports={
                 }),
                 personal_details:yup.object(isSkip?{}:{
                     full_name:yup.string().required(),
-                    mobile_number:yup.array().required(),
-                    email:yup.array().required(),
+                    mobile_number:yup.string().required(),
+                    email:yup.string().required(),
                     social_media:yup.array().required(),
                     photo:yup.string(),
                     address:yup.string().required(),
@@ -47,8 +50,8 @@ module.exports={
                 }),
                 company_details:yup.object(isSkip?{}:{
                     company_name:yup.string().required(),
-                    mobile_number:yup.array().required(),
-                    email:yup.array().required(),
+                    mobile_number:yup.string().required(),
+                    email:yup.string().required(),
                     social_media:yup.array().required(),
                     photo:yup.string(),
                     address:yup.string().required(),
@@ -89,6 +92,9 @@ module.exports={
                 payment_details.order_id=result.id;
                 await PaymentDetails.create(payment_details).then();
 
+                //Update the customer purchase status
+                await Customer.update({is_subscribed:1},{where:{account:id}}).then();
+
             }
 
             return res.status(200).json({success:true,message:'Order placed successfully'});
@@ -118,8 +124,8 @@ module.exports={
                 order_id:yup.string().required(),
                 personal_details:yup.object(isPersonalAvailable?{
                     full_name:yup.string().required(),
-                    mobile_number:yup.array().required(),
-                    email:yup.array().required(),
+                    mobile_number:yup.string().required(),
+                    email:yup.string().required(),
                     social_media:yup.array().required(),
                     photo:yup.string(),
                     address:yup.string().required(),
@@ -127,8 +133,8 @@ module.exports={
                 }:{}),
                 company_details:yup.object({
                     company_name:yup.string().required(),
-                    mobile_number:yup.array().required(),
-                    email:yup.array().required(),
+                    mobile_number:yup.string().required(),
+                    email:yup.string().required(),
                     social_media:yup.array().required(),
                     photo:yup.string(),
                     address:yup.string().required(),
@@ -186,6 +192,7 @@ module.exports={
                     'quantity', o.quantity,
                     'price', o.price,
                     'is_active', o.is_active,
+                    'card_name', o.card_name,
                     'company_details', 
                     JSON_OBJECT(
                         'id', c.id,
@@ -226,7 +233,9 @@ module.exports={
         LEFT JOIN 
             personal_details AS p ON o.id = p.order_id
         LEFT JOIN 
-            payment_details AS pay ON o.id = pay.order_id`;
+            payment_details AS pay ON o.id = pay.order_id
+            
+            where o.is_active=1`;
 
             var list =  await db.query(qry).then();
 
