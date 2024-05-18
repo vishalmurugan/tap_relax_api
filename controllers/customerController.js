@@ -19,6 +19,7 @@ module.exports={
         try {
             var { id }= req.user;
             var { delivery_details,personal_details,company_details,payment_details,order_details,isSkip }= req.body;
+            var type= order_details?.cardType;
 
             //Validation schema
             var schema=yup.object({
@@ -39,7 +40,7 @@ module.exports={
                     country:yup.string().required(),
                     pincode:yup.string().required()
                 }),
-                personal_details:yup.object(isSkip?{}:{
+                personal_details:yup.object((isSkip || type===1)?{}:{
                     full_name:yup.string().required(),
                     mobile_number:yup.string().required(),
                     email:yup.string().required(),
@@ -80,10 +81,12 @@ module.exports={
             await DeliveryDetails.create(delivery_details).then();
 
             if(isSkip===false){
-                //Insert data in Personal details table
-                personal_details.order_id=result.id;
-                await PersonalDetails.create(personal_details).then();
 
+                if(type===0){
+                    //Insert data in Personal details table
+                    personal_details.order_id=result.id;
+                    await PersonalDetails.create(personal_details).then();
+                }
                 //Insert data in Company details table
                 company_details.order_id=result.id;
                 await CompanyDetails.create(company_details).then();
@@ -182,6 +185,8 @@ module.exports={
     getCardsList:async function(req,res){
         try {
             
+            var { type } = req.query;
+
             var qry=`SELECT 
             JSON_ARRAYAGG(
                 JSON_OBJECT(
@@ -193,6 +198,7 @@ module.exports={
                     'price', o.price,
                     'is_active', o.is_active,
                     'card_name', o.card_name,
+                    'cardType',o.cardType,
                     'company_details', 
                     JSON_OBJECT(
                         'id', c.id,
@@ -235,7 +241,7 @@ module.exports={
         LEFT JOIN 
             payment_details AS pay ON o.id = pay.order_id
             
-            where o.is_active=1`;
+            where o.is_active=1 AND o.cardType=${type}`;
 
             var list =  await db.query(qry).then();
 
