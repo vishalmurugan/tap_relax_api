@@ -186,6 +186,7 @@ module.exports={
         try {
             
             var { type } = req.query;
+            var {id }= req.user;
 
             var qry=`SELECT 
             JSON_ARRAYAGG(
@@ -241,7 +242,7 @@ module.exports={
         LEFT JOIN 
             payment_details AS pay ON o.id = pay.order_id
             
-            where o.is_active=1 AND o.cardType=${type}`;
+            where o.is_active=1 AND o.cardType=${type} AND o.account='${id}'`;
 
             var list =  await db.query(qry).then();
 
@@ -361,9 +362,7 @@ module.exports={
                         id: yup.number().required(),
                         url: yup.string().required(),
                         isShown: yup.boolean().required()
-                    }))
-                    .required()
-                    .min(1), 
+                    })), 
                 company_details_link: yup.array()
                     .of(yup.object({
                         id: yup.number().required(),
@@ -382,11 +381,11 @@ module.exports={
             obj.personal_details_link=personal_details_link;
             obj.company_details_link=company_details_link;
             obj.order_id=order_id;
-
-            var result= await ShareContact.create(obj).then();
+            await ShareContact.destroy({where:{order_id:order_id}}).then();
+            await ShareContact.create(obj).then();
 
             //Success response
-            return res.status(200).json({success:true,shareId:result.id})
+            return res.status(200).json({success:true,shareId:order_id})
 
         } catch (error) {
              //Send Error response
@@ -403,23 +402,65 @@ module.exports={
             var { id }= req.params;
 
             //To get all user card details
-            var contact= await ShareContact.findOne({where:{id:id}}).then();
+            var contact= await ShareContact.findOne({where:{order_id:id}}).then();
             var payment_details= await PaymentDetails.findOne({where:{order_id:contact.order_id}}).then();
-            var company_details= await CompanyDetails.findOne({where:{order_id:contact.order_id}}).then();
-            var personal_details= await PersonalDetails.findOne({where:{order_id:contact.order_id}}).then();
-
+            var company_details= await CompanyDetails.findOne({
+                where:{order_id:contact.order_id},
+                attributes: ['email','mobile_number','web_address','address','review_link'] 
+            }).then();
+            var personal_details= await PersonalDetails.findOne({
+                where:{order_id:contact.order_id},
+                attributes: ['email','mobile_number'] 
+            }).then();
+            var profile = await Customer.findOne({
+                where:{account:contact.account},
+                attributes: ['photo','username'] 
+            }).then();
             var response={};
             response['social_media']=contact;
             response['personal_details']=personal_details;
             response['company_details']=company_details;
             response['payment_details']=payment_details;
+            response['profile']=profile;
             response.success=true;
 
             //Success response
             return res.status(200).json(response);
 
         } catch (error) {
+            console.log(error)
             return res.status(200).json({ success:false,error: error });
+        }
+    },
+
+    updateProfile:async function(req,res){
+        try {
+            
+            var reqData=req.body;
+            var { photo} = reqData;
+            var { id }= req.user;
+            reqData.photo = photo || 'default.svg';
+
+              // Validation Schema
+              const schema = yup.object({
+                username: yup.string().required(),
+                email: yup.string().required(),
+                mobile_number: yup.string().required(),
+                address:yup.string().required(),
+                photo:yup.string()
+             })
+
+              // Validate the request data
+            await schema.validate(reqData, { abortEarly: false });
+
+            await Customer.update(reqData,{where:{account:id}}).then();
+
+            return res.status(200).json({success:true});
+
+        } catch (error) {
+            //Send Error response
+            var code= (error.name === 'ValidationError')?400:500;   
+            return res.status(code).json({ success:false,error: error });
         }
     }
 }

@@ -14,7 +14,8 @@ const Customer = db.define('customer_profiles',{
        defaultValue: DataTypes.UUIDV4
       },
 	 username:{type: DataTypes.STRING},
-	 photo:{type: DataTypes.STRING},
+	 photo:{type: DataTypes.STRING,defaultValue:'default.svg'},
+	 address:{type: DataTypes.STRING},
 	 email:{type: DataTypes.JSON},
 	 mobile_number:{type: DataTypes.JSON},
    account:{type:DataTypes.UUID,
