@@ -5,6 +5,7 @@ const db=require('../config/database');
 
 //Importing Packages
 const yup=require('yup');
+const Customer = require('../modals/customer_profiles');
 
 module.exports={
 
@@ -180,6 +181,7 @@ module.exports={
               var code= (error.name === 'ValidationError')?400:500;   
               return res.status(code).json({ success:false,error: error });
         }
-    }
+    },
+
 
 }

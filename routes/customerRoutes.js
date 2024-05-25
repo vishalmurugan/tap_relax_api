@@ -13,6 +13,7 @@ router.post('/update-order',auth,customerController.updateOrderDetails);
 router.post('/share-contact',auth,customerController.shareContact);
 
 router.put('/cards/update',auth,customerController.updateCardDetails);
+router.put('/profile/update',auth,customerController.updateProfile);
 
 router.get('/cards/list',auth,customerController.getCardsList);
 router.get('/cards/:id',auth,customerController.viewCard);
