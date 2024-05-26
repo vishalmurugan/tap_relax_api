@@ -57,7 +57,7 @@ app.get('/',function(req,res){
     return res.send('Tab & Relax API Connected')
 });
 
-// var table=require('./modals/customer_profiles');
+// var table=require('./modals/orders');
 
 // table.sync({alter:true})
 //   .then(() => {

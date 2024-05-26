@@ -113,7 +113,12 @@ module.exports={
                         return res.status(400).json({ success:false,error: 'Invalid Email or Password' });
                     }
               }else{
-                return res.status(400).json({ success:false,error: 'Account Not Verified. Please verify the account' });
+                //Generate randon OTP
+                var randomOtp=utils.otpGenerate();
+                await Mail.sendMail({to:user.email,message:`<h4>Your Account Verification OTP: ${randomOtp} </h4>`,subject:'Account Vefication'});
+                await Users.update({ otp:randomOtp },{where:{id:user.id}});
+                
+                return res.status(400).json({ success:false,error: 'Account Not Verified. Please verify the account',otp:true,userId:user.id });
               }
             }else{
                 return res.status(400).json({ success:false,error: 'Acoount Not Exist' });
@@ -209,7 +214,7 @@ module.exports={
                     var randomOtp=utils.otpGenerate();
                     await Users.update({ otp:randomOtp },{where:{id:user.id}});
 
-                    await Mail.sendMail({to:reqData.email,message:`<h4>Your Account Rest Password OTP: ${randomOtp} </h4>`,subject:'Reset Password'});
+                    await Mail.sendMail({to:reqData.email,message:`<h4>Your Account Reset Password OTP: ${randomOtp} </h4>`,subject:'Reset Password'});
 
                     return res.status(200).json({ success:true,message: 'OTP send successfully',userId:user.id });
                 }

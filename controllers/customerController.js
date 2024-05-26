@@ -37,7 +37,7 @@ module.exports={
                     shipping_address:yup.string().required(),
                     city:yup.string().required(),
                     state:yup.string().required(),
-                    country:yup.string().required(),
+                   // country:yup.string().required(),
                     pincode:yup.string().required()
                 }),
                 personal_details:yup.object((isSkip || type===1)?{}:{
@@ -406,7 +406,7 @@ module.exports={
             var payment_details= await PaymentDetails.findOne({where:{order_id:contact.order_id}}).then();
             var company_details= await CompanyDetails.findOne({
                 where:{order_id:contact.order_id},
-                attributes: ['email','mobile_number','web_address','address','review_link'] 
+                attributes: ['email','mobile_number','web_address','address','review_link','description'] 
             }).then();
             var personal_details= await PersonalDetails.findOne({
                 where:{order_id:contact.order_id},
