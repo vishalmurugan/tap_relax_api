@@ -41,8 +41,6 @@ module.exports={
             //Generate randon OTP
             reqData.otp=utils.otpGenerate();
              
-            await Mail.sendMail({to:reqData.email,message:`<h4>Your Account Registeration OTP: ${reqData.otp} </h4>`,subject:'Account Registration'});
-
             // Insert in user table
             var result=await Users.create(reqData).then();
 
@@ -55,6 +53,8 @@ module.exports={
 
             await Customer.create(profileData).then();
     
+            await Mail.sendMail({to:reqData.email,message:`<h4>Your Account Registeration OTP: ${reqData.otp} </h4>`,subject:'Account Registration'});
+
             // Send success response
             return res.status(200).json({ success:true,message: 'OTP send successfully',userId:result.id });
 
